@@ -1,5 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include <sys/socket.h> //For Sockets
 #include <netinet/in.h> //For the AF_INET (Address Family)
 #include <arpa/inet.h>
@@ -41,8 +39,7 @@ int main(){
     bzero(recv_buffer, BUFF_LEN);
 
     while(1){
-        commands(sd_connection, send_buffer, recv_buffer);
-        break;
+        if(commands(sd_connection) == 1) break;
     }
 
     close(sd_connection);

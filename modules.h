@@ -12,12 +12,15 @@
 #define MAX_CON     5
 #define CMD_LEN     10
 
-void get_file(int sd_connection, char *send_buffer, char *recv_buffer);
-void put_file(int sd_connection, char *send_buffer, char *recv_buffer);
-void server_command(int sd_connection, char *send_buffer, char *recv_buffer);
-void client_recv_file(int sd_connection, char *send_buffer, char *recv_buffer);
-void server_recv_file(int sd_connection, char *send_buffer, char *recv_buffer);
-void commands(int sd_connection, char *send_buffer, char *recv_buffer);
+void get_file(int sd_connection);
+void put_file(int sd_connection);
+
+void client_recv_file(int sd_connection);
+void server_recv_file(int sd_connection);
+
+int server_command(int sd_connection);
+int commands(int sd_connection);
+
 void sending(int sd_connection, char *send_buffer);
 void receiving(int sd_connection, char *recv_buffer);
 

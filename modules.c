@@ -26,7 +26,7 @@ void receiving(int sd_connection, char *recv_buffer){
 }
 
 
-void get_file(int sd_connection, char *send_buffer, char *recv_buffer){
+void get_file(int sd_connection){
     int rc, file_des;
     char file_name[BUFF_LEN];
     
@@ -53,7 +53,7 @@ void get_file(int sd_connection, char *send_buffer, char *recv_buffer){
 }
 
 
-void client_recv_file(int sd_connection, char *send_buffer, char *recv_buffer){
+void client_recv_file(int sd_connection){
     int rc, fd, control = 0;
     char file_name[BUFF_LEN];
 
@@ -63,7 +63,7 @@ void client_recv_file(int sd_connection, char *send_buffer, char *recv_buffer){
     strcpy(file_name, temp_buffer_send);
 
 
-    fd = open("newFile.c", O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
+    fd = open("New_Download", O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
     if(fd < 0){
         printf("[-]open failed, error number %d\n", errno);
         exit(EXIT_FAILURE);
@@ -92,7 +92,7 @@ void client_recv_file(int sd_connection, char *send_buffer, char *recv_buffer){
 }
 
 
-void put_file(int sd_connection, char *send_buffer, char *recv_buffer){
+void put_file(int sd_connection){
     int rc, file_des;
     char file_name[BUFF_LEN];
     
@@ -116,7 +116,7 @@ void put_file(int sd_connection, char *send_buffer, char *recv_buffer){
     close(file_des);
 }
 
-void server_recv_file(int sd_connection, char *send_buffer, char *recv_buffer){
+void server_recv_file(int sd_connection){
     int rc, fd, control = 0;
     char file_name[BUFF_LEN];
 
@@ -151,7 +151,7 @@ void server_recv_file(int sd_connection, char *send_buffer, char *recv_buffer){
 }
 
 
-void server_command(int sd_connection, char *send_buffer, char *recv_buffer){
+int server_command(int sd_connection){
     int rc;
     FILE *fp;
     char container[BUFF_LEN];
@@ -159,12 +159,18 @@ void server_command(int sd_connection, char *send_buffer, char *recv_buffer){
     receiving(sd_connection, recv_buffer);
 
     if(strcmp(temp_buffer_recv, "get\n") == 0){
-        get_file(sd_connection, send_buffer, recv_buffer);
+        get_file(sd_connection);
     }
     
     if(strcmp(temp_buffer_recv, "put\n") == 0){
-        server_recv_file(sd_connection, send_buffer, recv_buffer);
+        server_recv_file(sd_connection);
     }
+
+    if(strcmp(container, "exit\n") == 0){
+        printf("[+]client closed the connection\n");
+        return 1;
+    }
+
     else{
 
         fp = popen(temp_buffer_recv, "r");
@@ -185,12 +191,12 @@ void server_command(int sd_connection, char *send_buffer, char *recv_buffer){
 
 }
 
-void commands(int sd_connection, char *send_buffer, char *recv_buffer){
+int commands(int sd_connection){
     int rc;
     char container[BUFF_LEN];
 
     printf("========== COMMANDS ==========\n");
-    printf("ls\ncd\nmkdir\nget\nput\nlcd\n");
+    printf("ls\ncd\nmkdir\nget\nput\nexit");
     printf("FTP> ");
 
     fgets(send_buffer, BUFF_LEN, stdin);
@@ -199,11 +205,16 @@ void commands(int sd_connection, char *send_buffer, char *recv_buffer){
     printf("[+]waiting ..\n");
 
     if(strcmp(container, "get\n") == 0){
-        client_recv_file(sd_connection, send_buffer, recv_buffer);
+        client_recv_file(sd_connection);
     }
 
     if(strcmp(container, "put\n") == 0){
-        put_file(sd_connection, send_buffer, recv_buffer);
+        put_file(sd_connection);
+    }
+
+    if(strcmp(container, "exit\n") == 0){
+        printf("[+]exiting, goodbye!\n");
+        return 1;
     }
 
     else{
