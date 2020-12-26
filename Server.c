@@ -39,29 +39,26 @@ int main(){
     printf("[+]listen OK\n");
 
     size_addr = sizeof(struct sockaddr_in);
-    sd_connection = accept(sd_server, (struct sockaddr *)&client_addr, &size_addr);
-    if(sd_connection < 0){
-        printf("[-]accept failed, error number %d\n", errno);
-        exit(EXIT_FAILURE);
-    }
-    printf("[+]accept OK\n");
-
-    strcpy(send_buffer, "Welcome to Summoner's Rift FTP Server!\n");
-    rc = send(sd_connection, send_buffer, BUFF_LEN, 0);
-    if(rc < 0){
-        printf("[-]send failed, error number %d\n", errno);
-        exit(EXIT_FAILURE);
-    }
-    printf("[+]send OK\n");
-    bzero(send_buffer, BUFF_LEN);
 
     while(1){
 
-        if(server_command(sd_connection) == 1) break;
+        sd_connection = accept(sd_server, (struct sockaddr *)&client_addr, &size_addr);
+        if(sd_connection < 0){
+            printf("[-]accept failed, error number %d\n", errno);
+            exit(EXIT_FAILURE);
+        }
+        printf("[+]accept OK\n");
 
+        do{
+            rc = server_command(sd_connection);
+            printf("valore resitituito %d\n", rc);
+        } while(rc != 1);
+
+        break;
+        close(sd_connection);
     }
 
-    close(sd_connection);
+    
     close(sd_server);
 
     return 0;

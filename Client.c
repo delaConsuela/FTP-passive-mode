@@ -1,15 +1,10 @@
-#include <sys/socket.h> //For Sockets
-#include <netinet/in.h> //For the AF_INET (Address Family)
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
 #include "modules.c"
-
-/*
-void recv_file(int sd_connection, char *send_buffer, char *recv_buffer);
-void commands(int sd_connection, char *send_buffer, char *recv_buffer);
-*/
 
 
 int main(){
@@ -29,18 +24,12 @@ int main(){
     } 
     printf("[+]connection established\n");
 
-    //messaggio di benvenuto
-    rc = recv(sd_connection, recv_buffer, BUFF_LEN, 0);
-    if(rc < 0){
-        printf("[-]recv failed, error number %d\n", errno);
-        exit(EXIT_FAILURE);
-    }   
-    printf("[+]message received: %s", recv_buffer);
-    bzero(recv_buffer, BUFF_LEN);
+    printf("ok\n");
 
-    while(1){
-        if(commands(sd_connection) == 1) break;
-    }
+    do{
+        rc = commands(sd_connection);
+        printf("valore resitituito %d\n", rc);
+    } while(rc != 1);
 
     close(sd_connection);
     printf("[+]client ended succesfully\n");
