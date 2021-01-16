@@ -18,8 +18,8 @@ void put_file(int sd_connection);
 void client_recv_file(int sd_connection);
 void server_recv_file(int sd_connection);
 
-int server_command(int sd_connection);
-int commands(int sd_connection);
+int server_command(int sd_connection, int sd_connection_data);
+int commands(int sd_connection, int sd_connection_data);
 
 void sending(int sd_connection, char *send_buffer);
 void receiving(int sd_connection, char *recv_buffer);
