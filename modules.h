@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 #define PORT        3000
-#define BUFF_LEN    16384
+#define BUFF_LEN    2000
 #define MAX_CON     5
 #define CMD_LEN     10
 
@@ -31,3 +31,6 @@ char temp_buffer_recv[BUFF_LEN];
 //usati per il trasferimento
 char send_buffer[BUFF_LEN];
 char recv_buffer[BUFF_LEN];
+
+int numeroDownload = 0;
+int numeroUpload = 0;

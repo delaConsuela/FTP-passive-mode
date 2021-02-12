@@ -36,6 +36,8 @@ void receiving(int sd_connection, char *recv_buffer){
 void get_file(int sd_connection){
     int rc, file_des;
     char file_name[BUFF_LEN];
+    struct stat st;
+    int size;
 
     printf("[+]waiting file name ..\n");
     receiving(sd_connection, recv_buffer);
@@ -48,7 +50,14 @@ void get_file(int sd_connection){
     }
     printf("[+]file opened correctly, file descriptor %d\n", file_des);
 
-    rc = sendfile(sd_connection, file_des, NULL, BUFF_LEN);
+    stat(file_name, &st);
+    size = st.st_size;
+    printf("[+]file size %d", size);
+
+    sprintf(send_buffer, "%d", size);
+    sending(sd_connection, send_buffer);
+
+    rc = sendfile(sd_connection, file_des, NULL, size);
     if (rc < 0){
         printf("[-]sendfile failed, error number %d\n", errno);
         exit(EXIT_FAILURE);
@@ -60,47 +69,63 @@ void get_file(int sd_connection){
 void client_recv_file(int sd_connection){
     int rc, fd, control = 0;
     char file_name[BUFF_LEN];
+    char num[5];
+    int size;
 
     printf("[+]enter the name of the file: ");
     scanf("%s", send_buffer);
     sending(sd_connection, send_buffer);
     strcpy(file_name, temp_buffer_send);
 
-    fd = open("New_Download", O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
+    strcpy(file_name, "New_Download");
+    sprintf(num, "%d", numeroDownload);
+    numeroDownload++;
+    strcat(file_name, num);
+
+    printf("nome del file %s", file_name);
+
+    fd = open(file_name, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
     if (fd < 0){
         printf("[-]open failed, error number %d\n", errno);
         exit(EXIT_FAILURE);
     }
     printf("[+]file downloading.. \n");
 
-    while (1){
-        rc = recv(sd_connection, recv_buffer, BUFF_LEN, 0);
+    receiving(sd_connection, recv_buffer);
+    size = atoi(temp_buffer_recv);
 
-        printf("[+]client recv_file rc value = %d\n", rc);
+    
+    rc = recv(sd_connection, recv_buffer, size, 0);
+    rc = sizeof(recv_buffer);
+    printf("dimensione: %d", rc);
 
-        if (rc > 0){
+    printf("[+]client recv_file rc value = %d\n", rc);
 
-            control = write(fd, recv_buffer, BUFF_LEN);
-            if (control < 0){
-                printf("[-]write failed, error number %d\n", errno);
-                exit(EXIT_FAILURE);
-            }
+    if (rc > 0){
 
-            printf("[+]byte received %d\n", control);
-            printf("[+]closing file ..\n");
-            close(fd);
-            break;
-        }
-        else if (rc < 0){
-            printf("[-]recv failed, error number %d\n", errno);
+        control = write(fd, recv_buffer, size);
+        if (control < 0){
+            printf("[-]write failed, error number %d\n", errno);
             exit(EXIT_FAILURE);
         }
+
+        printf("[+]byte received %d\n", control);
+        printf("[+]closing file ..\n");
+
+        close(fd);
+            
+    }
+    else if (rc < 0){
+        printf("[-]recv failed, error number %d\n", errno);
+        exit(EXIT_FAILURE);
     }
 }
 
 void put_file(int sd_connection){
     int rc, file_des;
     char file_name[BUFF_LEN];
+    struct stat st;
+    int size;
 
     printf("[+]enter the name of the file: ");
     scanf("%s", file_name);
@@ -112,7 +137,14 @@ void put_file(int sd_connection){
     }
     printf("[+]file opened correctly\n");
 
-    rc = sendfile(sd_connection, file_des, NULL, BUFF_LEN);
+    stat(file_name, &st);
+    size = st.st_size;
+    printf("[+]file size %d", size);
+
+    sprintf(send_buffer, "%d", size);
+    sending(sd_connection, send_buffer);
+
+    rc = sendfile(sd_connection, file_des, NULL, size);
     if (rc < 0){
         printf("[-]sendfile failed, error number %d\n", errno);
         exit(EXIT_FAILURE);
@@ -124,34 +156,46 @@ void put_file(int sd_connection){
 void server_recv_file(int sd_connection){
     int rc, fd, control = 0;
     char file_name[BUFF_LEN];
+    char num[5];
+    int size;
 
     printf("[+]server receving files.. \n");
 
-    fd = open("New_Upload", O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
+    strcpy(file_name, "New_Upload");
+    sprintf(num, "%d", numeroUpload);
+    numeroUpload++;
+    strcat(file_name, num);
+
+    fd = open(file_name, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
     if (fd < 0){
         printf("[-]open failed, error number %d\n", errno);
         exit(EXIT_FAILURE);
     }
     printf("[+]file uploading.. \n");
 
-    while(1){
-        rc = recv(sd_connection, recv_buffer, BUFF_LEN, 0);
-        if (rc > 0){
-            control = write(fd, recv_buffer, BUFF_LEN);
-            if (control < 0){
-                printf("[-]write failed, error number %d\n", errno);
-                exit(EXIT_FAILURE);
-            }
-            printf("[+]byte received %d\n", control);
-            printf("[+]closing file ..\n");
-            close(fd);
-            break;
-        }
-        else if (rc < 0){
-            printf("[-]recv failed, error number %d\n", errno);
+    receiving(sd_connection, recv_buffer);
+    size = atoi(temp_buffer_recv);
+
+    rc = recv(sd_connection, recv_buffer, size, 0);
+    printf("[+]client recv_file rc value = %d\n", rc);
+
+    if (rc > 0){
+        control = write(fd, recv_buffer, size);
+        if (control < 0){
+            printf("[-]write failed, error number %d\n", errno);
             exit(EXIT_FAILURE);
         }
+
+        printf("[+]byte received %d\n", control);
+        printf("[+]closing file ..\n");
+        close(fd);
+            
     }
+    else if (rc < 0){
+        printf("[-]recv failed, error number %d\n", errno);
+        exit(EXIT_FAILURE);
+    }
+    
 }
 
 int server_command(int sd_connection, int sd_connection_data){
@@ -189,6 +233,7 @@ int server_command(int sd_connection, int sd_connection_data){
 
         else{
 
+            //fp puntatore a uno stream aperto
             fp = popen(temp_buffer_recv, "r");
             if (fp == NULL){
                 printf("[-]popen failed, error number %d\n", errno);
